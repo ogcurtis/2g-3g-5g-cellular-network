@@ -194,8 +194,10 @@ install_apt_deps() {
     pcscd pcsc-tools python3-pyscard swig libpcsclite-dev
 
   log "=== Boost 1.83 (UHD on 26.04) + common libs ==="
+  # Do NOT install libboost-all-dev on 26.04 — it pulls Boost 1.90 and
+  # conflicts with the 1.83 -dev packages UHD 4.6 needs (Boost_DIR).
   apt_install \
-    libboost-all-dev \
+    libboost1.83-dev \
     libboost-system1.83-dev \
     libboost-filesystem1.83-dev \
     libboost-thread1.83-dev \
@@ -204,6 +206,8 @@ install_apt_deps() {
     libboost-program-options1.83-dev \
     libboost-serialization1.83-dev \
     libboost-test1.83-dev \
+    libboost-regex1.83-dev \
+    libboost-atomic1.83-dev \
     libfftw3-dev \
     libmbedtls-dev \
     libconfig++-dev \
