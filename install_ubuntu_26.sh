@@ -26,6 +26,7 @@ JOBS="$(nproc 2>/dev/null || echo 4)"
 DRY_RUN=0
 DEPS_ONLY=0
 SKIP_DOCKER=0
+SKIP_COMPOSE_PULL=0
 SKIP_UHD_IMAGES=0
 FORCE_EXTRACT=0
 
@@ -44,13 +45,14 @@ Usage:
   ./install_ubuntu_26.sh --dry-run              # print planned actions only
   sudo ./install_ubuntu_26.sh --deps-only       # apt packages only
   sudo ./install_ubuntu_26.sh                   # deps + rebuild + install binaries
-  sudo ./install_ubuntu_26.sh --skip-docker     # skip Docker CE / compose plugin
+  sudo ./install_ubuntu_26.sh --skip-docker     # skip Docker CE + OAI compose pull
 
 Options:
   -h, --help            Show this help
   -n, --dry-run         Print commands; do not change the system
   --deps-only           Install apt dependencies only (no source rebuild)
   --skip-docker         Do not install Docker CE / compose plugin
+  --skip-compose-pull   Skip docker compose pull for OAI 5GC images
   --skip-uhd-images     Skip uhd_images_downloader.py after UHD install
   --force-extract       Re-extract .tar/.tar.gz even if source dirs exist
   -j, --jobs N          Parallel make jobs (default: nproc)
@@ -230,6 +232,11 @@ install_apt_deps() {
 
   if [[ "$SKIP_DOCKER" -eq 0 ]]; then
     install_docker
+    if [[ "$SKIP_COMPOSE_PULL" -eq 0 ]]; then
+      pull_oai_compose_images
+    else
+      log "Skipping OAI compose image pull (--skip-compose-pull)"
+    fi
   else
     log "Skipping Docker (--skip-docker)"
   fi
@@ -277,6 +284,33 @@ install_docker() {
     log "Added $SUDO_USER to docker group (re-login required)"
   fi
   docker compose version || warn "docker compose not responding yet"
+}
+
+pull_oai_compose_images() {
+  local compose="$TRAINING_ROOT/5g_sa/conf/docker-compose-basic-nrf.yaml"
+  log "=== OAI 5GC docker compose pull ==="
+  if [[ ! -f "$compose" ]]; then
+    warn "compose file missing: $compose — skip image pull"
+    return 0
+  fi
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    log "Would: docker compose -f $compose pull"
+    grep -E '^\s+image:' "$compose" 2>/dev/null | sed 's/^/  /' || true
+    return 0
+  fi
+  if ! command -v docker >/dev/null 2>&1; then
+    warn "docker not found — skip compose pull"
+    return 0
+  fi
+  if docker compose version >/dev/null 2>&1; then
+    run docker compose -f "$compose" pull
+  elif command -v docker-compose >/dev/null 2>&1; then
+    run docker-compose -f "$compose" pull
+  else
+    warn "docker compose not available — skip OAI image pull"
+    return 0
+  fi
+  log "OAI 5GC images pulled (mysql + oai-* + trf-gen-cn5g)"
 }
 
 build_uhd() {
@@ -500,6 +534,7 @@ main() {
       -n|--dry-run) DRY_RUN=1; shift ;;
       --deps-only) DEPS_ONLY=1; shift ;;
       --skip-docker) SKIP_DOCKER=1; shift ;;
+      --skip-compose-pull) SKIP_COMPOSE_PULL=1; shift ;;
       --skip-uhd-images) SKIP_UHD_IMAGES=1; shift ;;
       --force-extract) FORCE_EXTRACT=1; shift ;;
       -j|--jobs) JOBS="$2"; shift 2 ;;

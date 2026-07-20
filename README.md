@@ -98,11 +98,11 @@ The installer encodes fixes from the LTS port:
 
 ## 5G core (Docker)
 
-OAI CN5G images are **not** stored in this repo (too large). After Docker is installed:
+The installer runs `docker compose pull` for `5g_sa/conf/docker-compose-basic-nrf.yaml`
+(unless `--skip-docker` / `--skip-compose-pull`). Images come from Docker Hub (not stored in git).
 
 ```bash
 cd 5g_sa/conf
-# use the training compose file; images pull from Docker Hub
 docker compose -f docker-compose-basic-nrf.yaml pull
 docker compose -f docker-compose-basic-nrf.yaml up -d
 ```
