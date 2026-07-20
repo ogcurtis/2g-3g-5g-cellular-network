@@ -1,0 +1,709 @@
+####################################################################################################
+#   Ethon Shield
+#   2025
+####################################################################################################
+#
+#   Copyright (C) 2024 Ethon Shield S.L.
+#
+#   ETHON SHIELD owns all rights (including copyrights, intellectual, industrial, 
+#   commercial or other exploitation rights) of the following document. Disclosure 
+#   or distribution to third party companies or subsidiaries is prohibited.
+#
+#   Contact information:
+#     - ethon@ethonshield.com
+#
+####################################################################################################
+
+###################################################
+###################################################
+### 					        ###
+###   TRAINING TELCO OPEN SOURCE - CHEATSHEET   ###
+###					        ###
+###################################################
+###################################################
+
+#####################
+### Prerequisites ###
+#####################
+
+*****************
+*** Libraries ***
+*****************
+
+sudo apt-get update
+sudo apt install net-tools curl xterm libqmi-utils udhcpc speedtest-cli
+
+# To check if it is installed
+dpkg -l | grep wireshark
+
+# Uninstall (if necessary)
+sudo apt remove wireshark
+sudo apt purge wireshark
+
+# Install wireshark
+sudo add-apt-repository ppa:wireshark-dev/stable
+sudo apt-get update
+sudo apt install wireshark
+
+******************
+*** ETTUS USRP ***
+******************
+
+sudo apt-get update
+sudo apt-get install autoconf automake build-essential ccache cmake cpufrequtils doxygen ethtool g++ git inetutils-tools libboost-all-dev libncurses-dev libusb-1.0-0 libusb-1.0-0-dev libusb-dev python3-dev python3-mako python3-numpy python3-requests python3-scipy python3-setuptools python3-ruamel.yaml 
+
+cd ~/training/uhd_releases
+tar xvfz v4.6.0.0.tar.gz 
+
+cd ~/training/uhd_releases/uhd-4.6.0.0/host
+mkdir build
+cd build
+cmake ../
+make -j$(nproc)
+sudo make install
+
+sudo ldconfig
+sudo /usr/local/lib/uhd/utils/uhd_images_downloader.py
+
+sudo uhd_find_devices 
+sudo uhd_usrp_probe 
+
+*****************************
+*** SIM card programming ****
+*****************************
+
+*** Sysmo Usim Tool
+
+sudo apt install pcscd pcsc-tools python3-pyscard python3-pip
+python3 -m pip install pytlv 
+
+cd ~/training/sims/
+tar xvf sysmo-usim-tool.tar
+cd sysmo-usim-tool/
+
+# <ADM> needs to be substituted for the ADM of YOUR SIM card 
+# This ADM is provided in the table of the workbook
+python3 ./sysmo-isim-tool.sja5.py --adm1 98920875 
+python3 ./sysmo-isim-tool.sja5.py --adm1 98920875 -k
+python3 ./sysmo-isim-tool.sja5.py --adm1 98920875 -o
+python3 ./sysmo-isim-tool.sja5.py --adm1 98920875 -t
+
+# Change the IMSI so its starts with 00101
+# The rest of the IMSI value will remain the same
+python3 ./sysmo-isim-tool.sja5.py --adm1 <ADM> -J <NEW_IMSI>
+
+*** Pysim
+
+cd ~/training/sims/
+sudo apt install swig libpcsclite-dev python3 python3-dev python3-pip
+
+tar xvf pysim.tar
+cd pysim 
+python3 -m pip install -r requirements.txt
+python3 ./pySim-shell.py -p0
+
+# If the script WORKS, IGNORE these next lines
+# If the script does NOT work, execute the following:
+python3 -m pip install --force-reinstall pyscard
+python3 ./pySim-shell.py -p0
+
+# If the script WORKS, IGNORE these next lines
+# If the script does NOT work, execute the following:
+python3 -m pip install --force-reinstall pycryptodomex
+python3 ./pySim-shell.py -p0
+
+####################
+### 2G - Osmocom ###
+####################
+
+***********
+*** GSM ***
+***********
+
+*** External dependencies
+
+sudo apt-get update 
+sudo apt-get install build-essential libtool libtalloc-dev shtool autoconf automake git pkg-config make gcc libpcsclite-dev libortp-dev libsctp-dev libmnl-dev libdbi-dev libdbd-sqlite3 libsqlite3-dev sqlite3 libc-ares-dev libgnutls28-dev 
+
+*** Osmocom libraries
+
+cd ~/training/2g/src
+
+# liburing
+
+tar xvf liburing.tar
+cd liburing/
+./configure
+make -j$(nproc)
+sudo make install
+sudo ldconfig -i
+cd ..
+
+# libosmocore
+
+tar xvf libosmocore.tar
+cd libosmocore/
+autoreconf -i
+./configure
+make -j$(nproc)
+sudo make install
+sudo ldconfig -i
+cd ..
+
+# libosmo-netif
+
+tar xvf libosmo-netif.tar
+cd libosmo-netif/
+autoreconf -i
+./configure
+make -j$(nproc)
+sudo make install
+sudo ldconfig -i
+cd ..
+
+# libosmo-abis
+
+sudo apt-get install dahdi-source 
+tar xvf libosmo-abis.tar
+cd libosmo-abis/
+autoreconf -i
+./configure
+make -j$(nproc)
+sudo make install
+sudo ldconfig -i
+cd ..
+
+# libosmo-sigtran
+
+tar xvf libosmo-sigtran.tar
+cd libosmo-sigtran/
+autoreconf -i
+./configure
+make -j$(nproc)
+sudo make install
+sudo ldconfig -i
+cd ..
+
+# libsmpp34
+
+tar xvf libsmpp34.tar
+cd libsmpp34/
+autoreconf -i
+./configure
+make -j$(nproc)
+sudo make install
+sudo ldconfig -i
+cd ..
+
+# osmo-bts 
+
+tar xvf osmo-bts.tar
+cd osmo-bts/
+autoreconf -i
+./configure --enable-trx # BE CAREFUL with copying this command, write it down by hand
+make -j$(nproc)
+sudo make install
+sudo ldconfig -i
+cd ..
+
+# osmo-hlr
+
+tar xvf osmo-hlr.tar
+cd osmo-hlr
+autoreconf -i
+./configure # here you will see all the needed dependencies
+make -j$(nproc)
+sudo make install
+sudo ldconfig -i
+cd ..
+
+# osmo-mgw
+
+tar xvf osmo-mgw.tar
+cd osmo-mgw
+autoreconf -i
+./configure # here you will see all the needed dependencies
+make -j$(nproc)
+sudo make install
+sudo ldconfig -i
+cd ..
+
+# osmo-msc
+
+tar xvf osmo-msc.tar
+cd osmo-msc
+autoreconf -i
+./configure # here you will see all the needed dependencies
+make -j$(nproc)
+sudo make install
+sudo ldconfig -i
+cd ..
+
+# osmo-bsc
+
+tar xvf osmo-bsc.tar
+cd osmo-bsc
+autoreconf -i
+./configure # here you will see all the needed dependencies
+make -j$(nproc)
+sudo make install
+sudo ldconfig -i
+cd ..
+
+# osmo-trx
+
+sudo apt install libfftw3-dev
+tar xvf osmo-trx.tar
+cd osmo-trx
+autoreconf -i
+./configure --with-uhd # Do not paste this command, it can produce errors
+make -j$(nproc)
+sudo make install
+sudo ldconfig -i
+cd ..
+
+# Execution
+
+cd ~/training/2g/conf
+ping <GGSN_IP_ADDRESS>
+
+./config_files_2g.sh -i <ip_address> -c <mcc> -n <mnc> -a <arfcn> -g <ggsn_ip_address>
+
+# In one terminal 
+sudo wireshark -i any -Y bssap -k 
+
+# In another terminal
+cd ~/training/2g/conf/
+sudo ./run2g.sh -t gsm -i <LOCAL_INTERFACE>
+telnet localhost <port-number>
+
+# Add subscriber to the HLR
+
+telnet localhost 4258
+enable
+subscriber imsi <YOUR_IMSI> create
+subscriber imsi <YOUR_IMSI> update msisdn <PHONE_NUMBER>
+subscriber msisdn <PHONE_NUMBER> update aud2g comp128v1 ki <YOUR_KI>
+subscriber msisdn <PHONE_NUMBER> show
+
+*** Quectel connection
+
+ls -lrt /dev/cdc*
+
+cd ~/training/
+sudo ./quecController_telco_training.sh -m EC25 -r gsm -c <CDC_DEV>
+
+************
+*** GPRS ***
+************
+
+*** Osmocom Libraries
+
+cd ~/training/2g/src
+
+# osmo-ggsn
+
+tar xvf osmo-ggsn.tar
+cd osmo-ggsn
+autoreconf -i
+./configure
+make -j$(nproc) 
+sudo make install
+sudo ldconfig
+cd ..
+
+# osmo-sgsn
+
+tar xvf osmo-sgsn.tar
+cd osmo-sgsn
+autoreconf -i
+./configure 
+make -j$(nproc)
+sudo make install
+sudo ldconfig
+cd ..
+
+# osmo-pcu
+
+tar xvf osmo-pcu.tar
+cd osmo-pcu
+autoreconf -i
+./configure 
+make -j$(nproc)
+sudo make install
+sudo ldconfig
+cd ..
+
+cd ~/training/2g/conf
+sudo ./run2g.sh -t gprs -i <LOCAL_INTERFACE>
+
+sudo wireshark -i any -Y gsm_a.dtap -k 
+
+*** Quectel connection
+
+ls -lrt /dev/cdc*
+
+cd ~/training
+sudo ./quecController_telco_training.sh -m EC25 -r gsm -c <CDC_DEV>
+
+ls -lrt /dev/cdc*
+
+sudo qmicli --device="<CDC_DEV>" --device-open-proxy --nas-get-serving-system
+sudo qmicli --device="<CDC_DEV>" --device-open-proxy --nas-get-cell-location-info
+
+sudo qmicli --device="<CDC_DEV>" --device-open-proxy --get-wwan-iface
+
+cat /sys/class/net/<WWAN_IFACE> /qmi/raw_ip
+
+ifconfig <WWAN_IFACE> down
+
+echo "Y" > /sys/class/net/<WWAN_IFACE> /qmi/raw_ip
+
+ifconfig <WWAN_IFACE> up 
+
+sudo qmicli --device="<CDC_DEV>" --device-open-proxy --wds-start-network="apn='internet',ip-type=4" --client-no-release-cid
+
+sudo udhcpc -i <WWAN_IFACE>
+
+sppedtest
+
+###################
+### 4G - srsRAN ###
+###################
+
+sudo apt-get install build-essential cmake libfftw3-dev libmbedtls-dev libboost-program-options-dev libconfig++-dev libsctp-dev
+
+********************
+*** Installation ***
+********************
+
+cd ~/training/4g/src/
+tar xvf srsRAN_4G.tar
+cd srsRAN_4G
+mkdir build
+cd build
+cmake ../
+make -j$(nproc)
+sudo make install
+sudo ldconfig -i 
+sudo srsran_install_configs.sh user 
+
+************************
+*** Configure srsRAN ***
+************************
+
+cd ~/training/4g/conf/
+./config_files_lte.sh -c <mcc> -n <mnc> -e <earfcn>
+
+cd ~/training/sims/sysmo-usim-tool
+python3 ./sysmo-isim-tool.sja5.py --adm1 <ADM> -o
+
+# If the OP is configured, change it to the OPc, using the same value as the OP
+python3 ./sysmo-isim-tool.sja5.py --adm1 <ADM> -C <OPC>
+
+cd ~/training/4g/conf
+./add_user_lte.sh -i <IMSI> -k <KI> -o <OPC>
+ 
+**********************
+*** Execute srsRAN ***
+**********************
+
+# Execute wireshark before deploying the network
+sudo wireshark -i any -Y "sctp" -k
+
+cd ~/training/4g/conf
+sudo srsepc epc.conf
+
+cd ~/training/4g/conf
+sudo srsenb enb.conf
+
+# If you don't have access to the Internet
+
+cd ~/training/4g/srsRAN/srsepc
+# The interface variable is the one that is connected to the Internet
+sudo ./srsepc_if_masq.sh <interface>
+
+**************************
+*** Quectel Connection ***
+**************************
+
+ls -lrt /dev/cdc*
+
+cd ~/training/
+sudo ./quecController_telco_training.sh -m EC25 -r lte -c <CDC_DEV>
+
+ls -lrt /dev/cdc*
+
+sudo qmicli --device="<CDC_DEV>" --device-open-proxy --nas-get-serving-system
+sudo qmicli --device="<CDC_DEV>" --device-open-proxy --nas-get-cell-location-info
+
+sudo qmicli --device="<CDC_DEV>" --device-open-proxy --get-wwan-iface
+
+sudo qmicli --device="<CDC_DEV>" --device-open-proxy --wds-start-network="apn='srsapn',ip-type=4" --client-no-release-cid
+
+sudo udhcpc -q -f -i wwan0
+
+speedtest
+
+###################################
+### 5G NSA - Open Air Interface ###
+###################################
+
+*************************
+*** Installing docker ***
+*************************
+
+dpkg --list | grep docker
+
+# If the above command asserts that you have docker installed
+sudo apt-get remove docker docker-engine docker.io containerd runc
+
+*** Configuring the Repository
+
+sudo apt-get install apt-transport-https ca-certificates curl gnupg lsb-release
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+*** Install Docker Engine
+
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+sudo docker run hello-world
+
+*** Docker Compose V2 (plugin)
+
+# Prefer the Compose V2 plugin on Ubuntu 22.04+
+sudo apt-get install docker-compose-plugin
+docker compose version
+
+*********************************
+*** OAI - Evolved Packet Core ***
+*********************************
+
+cd ~/training/5g_nsa/src/
+
+sudo docker load < ubuntu_bionic.tar
+sudo docker load < cassandra_2.1.tar
+sudo docker load < redis_6.0.5.tar
+sudo docker load < oai-hss_v1.2.0.tar
+sudo docker load < oai-spgwc_v1.2.0.tar
+sudo docker load < oai-spgwu_tiny_v1.2.0.tar
+sudo docker load < magma-mme_latest.tar
+
+cd ~/training/5g_nsa/src/
+tar xvf openair-epc-fed.tar
+cd openair-epc-fed/
+git describe --tags
+
+*******************************
+*** Radio Nodes - eNB & gNB ***
+*******************************
+
+cd ~/training/5g_nsa/src/
+tar xvf openairinterface5g.tar 
+cd openairinterface5g/
+git describe --tags
+
+# Modification of OAI installation script to prevent automatic UHD download
+cd cmake_targets/
+vi build_oai
+
+# Install radio nodes
+cd ~/training/5g_nsa/src/openairinterface5g/
+source oaienv
+cd cmake_targets
+sudo ./build_oai -I -w USRP --eNB --gNB
+
+**************************************
+*** 5G network configuration - NSA ***
+**************************************
+
+cd ~/training/5g_nsa/conf
+./config_files_nsa.sh -e <enb_ip_address> -g <gnb_ip_address> -c <mcc> -n <mnc> -t <tac> -b <eutra_band> -d <dl_freq_enb> -f <offset>  
+
+./add_user_nsa.sh -i <IMSI> -k <KI> -o <OP> 
+
+cd ~/training/sims/sysmo-usim-tool/
+python3 ./sysmo-isim-tool.sja5.py --adm1 <ADM> -o
+
+# If the above command has shown that the SIM is configured with the OPc, change it to OP:
+python3 ./sysmo-isim-tool.sja5.py --adm1 <ADM> -O <OP_VALUE>
+
+# Check if it has been configured correctly
+python3 ./sysmo-isim-tool.sja5.py --adm1 <ADM> -o
+
+# Copy configuration files to corresponding directory
+cp ~/training/5g_nsa/conf/mme.conf ~/training/5g_nsa/src/openair-epc-fed/docker-compose/magma-mme-demo/
+cp ~/training/5g_nsa/conf/docker-compose.yml ~/training/5g_nsa/src/openair-epc-fed/docker-compose/magma-mme-demo/
+
+******************************
+*** Deployment of 5G - NSA ***
+******************************
+
+*** EPC Deployment
+
+sudo sysctl net.ipv4.conf.all.forwarding=1
+sudo iptables -P FORWARD ACCEPT
+
+# Run wireshark to capture traces
+sudo wireshark -i any -Y "sctp" -k
+
+cd ~/training/5g_nsa/src/openair-epc-fed/docker-compose/magma-mme-demo
+grep __IMSI__ docker-compose.yml
+
+sudo docker compose up -d db_init
+sudo docker logs demo-db-init --follow
+
+# Execute when the above command displays "OK"
+sudo docker rm -f demo-db-init
+sudo docker compose up -d oai_spgwu
+sudo docker ps -a
+
+# On another terminal, if you want to see the logs
+cd ~/training/5g_nsa/src/openair-epc-fed/docker-compose/magma-mme-demo
+sudo docker compose -f docker-compose.yml logs -f -t
+
+# To stop the core
+cd ~/training/5g_nsa/src/openair-epc-fed/docker-compose/magma-mme-demo
+sudo docker compose down
+
+*** Radio nodes deployment
+
+sudo wireshark -i any -Y sctp -k
+
+# eNB
+cd ~/training/5g_nsa/src/openairinterface5g/cmake_targets/ran_build/build 
+sudo ./lte-softmodem -O ~/training/5g_nsa/conf/enb.band7.tm1.fr1.25PRB.usrpb210.conf
+
+# gNB
+
+# Route configuration for the gNB 
+sudo ip route add 192.168.61.128/26 via <EPC_SERVER_IP> dev <LOCAL_INTERFACE>
+
+# Check connectivity with MME
+ping 192.168.61.149 
+
+cd ~/training/5g_nsa/src/openairinterface5g/cmake_targets/ran_build/build
+sudo ./nr-softmodem -O ~/training/5g_nsa/conf/gnb.band78.tm1.fr1.106PRB.usrpb210.conf -E
+
+############################
+### 5G SA - OAI & srsRAN ###
+############################
+
+********************
+*** NRCORE - OAI ***
+********************
+
+# Before starting with 5G SA deployment, stop the EPC
+cd ~/training/5g_nsa/src/openair-epc-fed/docker-compose/magma-mme-demo
+sudo docker compose down
+
+cd ~/training/5g_sa/src/
+sudo docker load < ubuntu_jammy.tar
+sudo docker load < mysql_8.0.tar
+sudo docker load < oai-amf_v2.1.0.tar
+sudo docker load < oai-ausf_v2.1.0.tar
+sudo docker load < oai-lmf_v2.1.0.tar
+sudo docker load < oai-nrf_v2.1.0.tar
+sudo docker load < oai-nssf_v2.1.0.tar
+sudo docker load < oai-pcf_v2.1.0.tar
+sudo docker load < oai-smf_v2.1.0.tar
+sudo docker load < oai-udm_v2.1.0.tar
+sudo docker load < oai-udr_v2.1.0.tar
+sudo docker load < oai-upf-vpp_v2.1.0.tar
+sudo docker load < oai-upf_v2.1.0.tar
+sudo docker load < trf-gen-cn5g_latest.tar
+
+cd ~/training/5g_sa/src/
+tar xvf oai-cn5g-fed.tar
+cd oai-cn5g-fed/
+git describe --tags
+
+
+********************
+*** gNB - srsRAN ***
+********************
+
+sudo apt-get install cmake make gcc g++ pkg-config libfftw3-dev libmbedtls-dev libsctp-dev libyaml-cpp-dev libgtest-dev
+cd ~/training/5g_sa/src
+
+tar xvf srsRAN_Project.tar
+cd srsRAN_Project
+
+# Check that the project is in the correct branch - release_24_04
+git describe --tags
+
+mkdir build
+cd build
+cmake ../
+make -j$(nproc)
+sudo make install
+
+***********************************
+*** 5G SA network configuration ***
+***********************************
+
+cd ~/training/5g_sa/conf
+./config_files_sa.sh -g <gnb_ip_address> -c <MCC> -n <MNC> -t <TAC> -a <NRARFCN>
+
+# Subscriber provisioning
+cd ~/training/sims/sysmo-usim-tool/
+python3 ./sysmo-isim-tool.sja5.py --adm1 <ADM> -C <OPC_value>
+python3 ./sysmo-isim-tool.sja5.py --adm1 <ADM> -o
+
+cd ~/training/5g_sa/conf
+./add_user_sa.sh -i <IMSI> -k <KI> -o <OPC>
+
+cd ~/training/5g_sa/conf
+cp ./basic_nrf_config.yaml ~/training/5g_sa/src/oai-cn5g-fed/docker-compose/conf/
+cp ./docker-compose-basic-nrf.yaml ~/training/5g_sa/src/oai-cn5g-fed/docker-compose/
+cp ./oai_db2.sql ~/training/5g_sa/src/oai-cn5g-fed/docker-compose/database/
+
+***************************************
+*** Deployment of the 5G SA network ***
+***************************************
+
+# Deploy the NRCORE 
+
+sudo sysctl net.ipv4.conf.all.forwarding=1
+sudo iptables -P FORWARD ACCEPT
+
+sudo wireshark -i any -Y "ngap || http || pfcp || gtp || sctp || http2" -k 
+
+cd ~/training/5g_sa/src/oai-cn5g-fed/docker-compose/ 
+sudo python3 ./core-network.py --type start-basic
+
+# To stop the core
+sudo python3 ./core-network.py --type stop-basic
+
+# Check that the AMF can be reached
+ping 192.168.70.132
+
+# Deploy the gNB 
+cd ~/training/5g_sa/conf
+sudo gnb -c gnb_rf_b200_tdd_n78_20mhz.yml
+
+sudo docker logs oai-amf
+
+cd ~/training/5g_sa/src/oai-cn5g-fed/docker-compose/ 
+sudo docker compose -f docker-compose-basic-nrf.yaml logs -f -t
+
+*** Quectel Connection
+
+ls -lrt /dev/cdc*
+
+cd ~/training/
+sudo ./quecController_telco_training.sh -m RM520N -r nr5g -c <CDC_DEV>
+
+sudo qmicli --device="<CDC_DEV>" --device-open-proxy --nas-get-serving-system
+sudo qmicli --device="<CDC_DEV>" --device-open-proxy --nas-get-cell-location-info
+
+sudo qmicli --device="<CDC_DEV>" --device-open-proxy --get-wwan-iface
+
+sudo qmicli --device="<CDC_DEV>" --device-open-proxy --wds-start-network="apn='oai',ip-type=4" --client-no-release-cid
+
+sudo udhcpc -q -f -i wwan0
+
+speedtest

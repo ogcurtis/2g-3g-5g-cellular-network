@@ -1,0 +1,72 @@
+# Git ignore for 2G/3G/5G Cellular Network lab
+# Keep source archives + configs; exclude extracted trees, builds, and Docker image dumps.
+
+# Secrets / local state
+SIM_Values
+.remote_bash_history
+*.db
+*.db-shm
+*.db-wal
+hlr.db*
+sms.db*
+
+# Python / test caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Editor / OS
+.DS_Store
+*.swp
+*~
+.idea/
+.vscode/
+
+# Build artifacts
+**/build/
+**/.libs/
+**/.deps/
+**/autom4te.cache/
+**/*.o
+**/*.lo
+**/*.la
+**/*.a
+!**/CMakeLists.txt
+
+# Huge training dumps (not needed for clone+build)
+complementaryFiles.tar.gz
+complementaryFiles*.tar.gz
+BaseStation/
+
+# Extracted source trees (rebuilt from *.tar / *.tar.gz by install_ubuntu_26.sh)
+uhd_releases/uhd-*/
+2g/src/libosmocore/
+2g/src/libosmo-*/
+2g/src/libsmpp34/
+2g/src/liburing/
+2g/src/osmo-*/
+4g/src/srsRAN_4G/
+5g_sa/src/srsRAN_Project/
+5g_sa/src/oai-cn5g-fed/
+5g_nsa/src/openairinterface5g/
+5g_nsa/src/openair-epc-fed/
+sims/pysim/
+sims/sysmo-usim-tool/
+
+# Docker / container image archives (pull from registries instead)
+**/ubuntu_*.tar
+**/mysql_*.tar
+**/cassandra_*.tar
+**/redis_*.tar
+**/magma-*.tar
+**/oai-*.tar
+**/trf-gen-*.tar
+5g_sa/src/oai-cn5g-fed.tar
+5g_nsa/src/openairinterface5g.tar
+
+# Runtime logs / captures (keep small samples optional)
+*.log
+/tmp/

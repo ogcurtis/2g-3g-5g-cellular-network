@@ -1,0 +1,19 @@
+# Example SIM / USIM lab values (DO NOT use production secrets)
+#
+# Copy to SIM_Values and fill in values from your workbook / card vendor.
+# SIM_Values is gitignored.
+
+ADM <YOUR_ADM>
+
+# Example algorithm setting:
+#   2g: MILENAGE
+#   3g: MILENAGE
+#   4g5g: MILENAGE
+
+# Keys (replace with your card values):
+#   Ki:  <32 hex chars>
+#   OPc: <32 hex chars>
+#   IMSI: 00101...
+
+PREFERRED_MCC=001
+PREFERRED_MNC=01
