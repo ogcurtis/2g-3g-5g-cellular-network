@@ -293,6 +293,7 @@ pull_oai_compose_images() {
     warn "compose file missing: $compose — skip image pull"
     return 0
   fi
+  prepare_oai_compose_layout
   if [[ "$DRY_RUN" -eq 1 ]]; then
     log "Would: docker compose -f $compose pull"
     grep -E '^\s+image:' "$compose" 2>/dev/null | sed 's/^/  /' || true
@@ -311,6 +312,57 @@ pull_oai_compose_images() {
     return 0
   fi
   log "OAI 5GC images pulled (mysql + oai-* + trf-gen-cn5g)"
+}
+
+# Compose file expects ./conf ./database ./healthscripts under 5g_sa/conf/.
+# Flat repo layout only ships basic_nrf_config.yaml + oai_db2.sql at the conf root.
+prepare_oai_compose_layout() {
+  local root="$TRAINING_ROOT/5g_sa/conf"
+  local f
+  log "=== prepare OAI compose bind-mount layout ==="
+  if [[ ! -d "$root" ]]; then
+    warn "missing $root"
+    return 0
+  fi
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    log "Would mkdir -p $root/{conf,database,healthscripts} and link/copy config + DB + healthcheck"
+    return 0
+  fi
+
+  mkdir -p "$root/conf" "$root/database" "$root/healthscripts"
+
+  # Remove accidental directories Docker created when a missing file was bind-mounted
+  for f in \
+    "$root/conf/basic_nrf_config.yaml" \
+    "$root/database/oai_db2.sql" \
+    "$root/healthscripts/mysql-healthcheck2.sh"
+  do
+    if [[ -d "$f" ]]; then
+      warn "removing docker-created directory masquerading as file: $f"
+      rm -rf "$f"
+    fi
+  done
+
+  if [[ -f "$root/basic_nrf_config.yaml" ]]; then
+    cp -f "$root/basic_nrf_config.yaml" "$root/conf/basic_nrf_config.yaml"
+  else
+    warn "missing $root/basic_nrf_config.yaml"
+  fi
+
+  if [[ -f "$root/oai_db2.sql" ]]; then
+    cp -f "$root/oai_db2.sql" "$root/database/oai_db2.sql"
+  else
+    warn "missing $root/oai_db2.sql"
+  fi
+
+  if [[ ! -f "$root/healthscripts/mysql-healthcheck2.sh" ]]; then
+    cat > "$root/healthscripts/mysql-healthcheck2.sh" <<'HC'
+#!/bin/bash
+mysqladmin ping -h localhost -uroot -plinux --silent
+HC
+  fi
+  chmod +x "$root/healthscripts/mysql-healthcheck2.sh"
+  log "OAI compose layout ready under $root"
 }
 
 build_uhd() {

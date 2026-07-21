@@ -98,16 +98,20 @@ The installer encodes fixes from the LTS port:
 
 ## 5G core (Docker)
 
-The installer runs `docker compose pull` for `5g_sa/conf/docker-compose-basic-nrf.yaml`
-(unless `--skip-docker` / `--skip-compose-pull`). Images come from Docker Hub (not stored in git).
+The installer prepares bind-mount paths under `5g_sa/conf/` (`conf/`, `database/`,
+`healthscripts/`) and runs `docker compose pull` for
+`docker-compose-basic-nrf.yaml` (unless `--skip-docker` / `--skip-compose-pull`).
+Images come from Docker Hub (not stored in git).
 
 ```bash
 cd 5g_sa/conf
+# layout is created by install_ubuntu_26.sh; or run prepare via a full install
 docker compose -f docker-compose-basic-nrf.yaml pull
 docker compose -f docker-compose-basic-nrf.yaml up -d
 ```
 
-Point `gnb` `amf.addr` / `bind_addr` at your `demo-oai` addresses (see cheatsheet).
+Point `gnb` `amf.addr` / `bind_addr` at your `demo-oai` / compose network addresses
+(typically AMF `192.168.70.132`, host bind `192.168.70.129`).
 
 ## Tests
 

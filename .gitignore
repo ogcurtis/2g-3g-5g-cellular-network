@@ -56,6 +56,15 @@ uhd_releases/uhd-*/
 sims/pysim/
 sims/sysmo-usim-tool/
 
+# Generated OAI compose bind copies (recreated by install_ubuntu_26.sh)
+5g_sa/conf/conf/
+5g_sa/conf/database/
+
+# Keep healthscripts in git (small); ignore accidental docker dir mounts
+5g_sa/conf/healthscripts/**
+!5g_sa/conf/healthscripts/mysql-healthcheck2.sh
+!5g_sa/conf/healthscripts/.gitkeep
+
 # Docker / container image archives (pull from registries instead)
 **/ubuntu_*.tar
 **/mysql_*.tar
